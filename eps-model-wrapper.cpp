@@ -121,6 +121,20 @@ void EPSModel::output_status() {
     std::cout << "===================\n";
 }
 
+void EPSModel::log_battery_voltage(const std::string& filename, double elapsed_time, bool in_sun){
+    std::ofstream ofs(filename, std::ios::app); // append to preserve all steps
+
+    // If file is empty, write the header first
+    if (ofs.tellp() == 0) {
+        ofs << "ElapsedTime,BatteryVoltage,InSun\n";
+    }
+
+    ofs << std::fixed << std::setprecision(2)
+        << elapsed_time << ","
+        << (bus[0].voltage / 1000.0) << ","
+        << (in_sun ? 1 : 0) << "\n";
+}
+
 // Returns if the sat is in the sun at all
 bool in_sun(const std::array<double, 3>& sun_vector) const {
     return sun_vector[0] != 0.0 || sun_vector[1] != 0.0 || sun_vector[2] != 0.0;

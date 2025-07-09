@@ -1,5 +1,4 @@
 #pragma once
-#include <map>
 #include <string>
 #include <vector>
 #include <array>
@@ -18,6 +17,8 @@ public:
     double get_battery_voltage();
     double get_battery_soc();   // Get the battery's state of charge: 0.0 - 1.0
     void output_status();   // Get a snapshot of EPS info
+    void log_battery_voltage(const std::string& filename, double elapsed_time, bool in_sun);
+
 
 private:
     struct Switch {
@@ -45,4 +46,5 @@ private:
     double max_battery;   // Battery capacity
     double nominal_batt_voltage;
     double battery_soc;
+
 };
