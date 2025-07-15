@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <iomanip>
 #include <iostream>
+#include <fstream>
 
 // Constructor: initialize rails, switches, parameters
 EPSModel::EPSModel(double initial_soc, double battery_voltage, double max_battery_wh){
@@ -21,15 +22,15 @@ EPSModel::EPSModel(double initial_soc, double battery_voltage, double max_batter
 
     // 3.3V rail (index 1)
     bus[1].voltage = 3.3 * 1000;
-    bus[1].current = 1.0 * 1000; // mA
+    bus[1].current = 0.15 * 1000; // mA
 
     // 5V rail (index 2)
     bus[2].voltage = 5.0 * 1000;
-    bus[2].current = 1.0 * 1000;
+    bus[2].current = 0.10 * 1000;
 
     // 12V rail (index 3)
     bus[3].voltage = 12.0 * 1000;
-    bus[3].current = 1.0 * 1000;
+    bus[3].current = 0.05 * 1000;
 
     // Solar array (index 4)
     bus[4].voltage = 32.0 * 1000;
@@ -126,22 +127,23 @@ void EPSModel::log_battery_voltage(const std::string& filename, double elapsed_t
 
     // If file is empty, write the header first
     if (ofs.tellp() == 0) {
-        ofs << "ElapsedTime,BatteryVoltage,InSun\n";
+        ofs << "ElapsedTime,SOC,BatteryVoltage,InSun\n";
     }
 
     ofs << std::fixed << std::setprecision(2)
         << elapsed_time << ","
+        << std::setprecision(4) << battery_soc << ","
         << (bus[0].voltage / 1000.0) << ","
         << (in_sun ? 1 : 0) << "\n";
 }
 
 // Returns if the sat is in the sun at all
-bool in_sun(const std::array<double, 3>& sun_vector) const {
+bool EPSModel::in_sun(const std::array<double, 3>& sun_vector){
     return sun_vector[0] != 0.0 || sun_vector[1] != 0.0 || sun_vector[2] != 0.0;
 }
 
 // Set the powers per panel
-void set_power_per_panel(const std::array<double, 5>& new_values) {
+void EPSModel::set_power_per_panel(const std::array<double, 5>& new_values) {
     power_per_panel = new_values;
 }
 
@@ -171,4 +173,5 @@ void EPSModel::update_battery_values(double timestep, double total_panel_power, 
     double batt_min_v = 0.95 * nominal_batt_voltage;
     double batt_diff = 0.1 * nominal_batt_voltage;
     bus[0].voltage = 1000.0 * (batt_min_v + batt_diff * (bus[0].battery_watthrs / max_battery));
+    battery_soc = std::max(0.0, std::min(1.0, bus[0].battery_watthrs / max_battery));
 }
