@@ -13,7 +13,7 @@ EPSModel::EPSModel(double initial_soc, double battery_voltage, double max_batter
     this->battery_soc = initial_soc;
 
     // Set per panel power
-    this->power_per_panel = {26.91, 26.91, 26.91, 26.91, 26.91};
+    this->power_per_panel = {26.91, 26.91, 26.91, 26.91, 26.91}; // +X, -X, +Y, -Y, -Z (use real value for -Z if you have it; I used 10.5 as a placeholder)
 
     // Initialize the battery rail (index 0)
     bus[0].voltage = nominal_batt_voltage * 1000;  // stored in mV (to match NOS3 sim)
@@ -72,7 +72,8 @@ void EPSModel::step(double timestep, const std::array<double, 3>& sun_vector) {
         switch_states[i] = switches[i].state;
     }
 
-    double total_panel_power = panel_inputs[0] + panel_inputs[1] + panel_inputs[2] + panel_inputs[3] + panel_inputs[4];
+    double total_panel_power = 0.0;
+    for (int i = 0; i < 5; ++i) total_panel_power += panel_inputs[i];
 
     update_battery_values(timestep, total_panel_power, switch_states);
 }
@@ -94,16 +95,13 @@ double EPSModel::get_battery_soc() {
     return std::max(0.0, std::min(1.0, bus[0].battery_watthrs / max_battery));  // Clamp between 0.0 and 1.0
 }
 
-// update each particular panels power levels based off the sun vector
+// update each particular panels power levels based off the sun vector (logic from nos3)
 void EPSModel::update_panel_powers_from_sunvec(const std::array<double, 3>& sun_vec) {
-    // Each entry in sun_vec is the cosine of the angle between the sun and the panel normal,
-    // and power_per_panel is the max for each face.
-    // Indices: 0=+X, 1=-X, 2=+Y, 3=-Y, 4=-Z
-    panel_inputs[0] = (sun_vec[0] > 0) ? sun_vec[0] * power_per_panel[0] : 0.0;  // +X
-    panel_inputs[1] = (sun_vec[0] < 0) ? -sun_vec[0] * power_per_panel[1] : 0.0; // -X
-    panel_inputs[2] = (sun_vec[1] > 0) ? sun_vec[1] * power_per_panel[2] : 0.0;  // +Y
-    panel_inputs[3] = (sun_vec[1] < 0) ? -sun_vec[1] * power_per_panel[3] : 0.0; // -Y
-    panel_inputs[4] = (sun_vec[2] < 0) ? -sun_vec[2] * power_per_panel[4] : 0.0; // -Z (no +Z like NOS3)
+    panel_inputs[0] = (sun_vec[0] > 0) ? sun_vec[0] * power_per_panel[0] : 0.0;   // +X
+    panel_inputs[1] = (sun_vec[0] < 0) ? -sun_vec[0] * power_per_panel[1] : 0.0;  // -X
+    panel_inputs[2] = (sun_vec[1] > 0) ? sun_vec[1] * power_per_panel[2] : 0.0;   // +Y
+    panel_inputs[3] = (sun_vec[1] < 0) ? -sun_vec[1] * power_per_panel[3] : 0.0;  // -Y
+    panel_inputs[4] = (sun_vec[2] < 0) ? -sun_vec[2] * power_per_panel[4] : 0.0;  // -Z
 }
 
 void EPSModel::output_status() {

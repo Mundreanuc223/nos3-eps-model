@@ -39,7 +39,7 @@ Nominal Scenario: Power should increase/stay the same when in the light, drop a 
 void nominal_night_pass_charging_test() {
 
     // Initialize the EPS model with desired parameters
-    EPSModel eps(0.80, 24.0, 20.0);
+    EPSModel eps(0.20, 24.0, 20.0);
 
     // Pass in the sun vector data
     std::vector<std::array<double, 3>> sun_vectors = read_sun_vectors("../inputs/night_pass");
@@ -68,7 +68,7 @@ causing it to drain battery even in sunlight
 */
 void switch_7_test(){
 
-    EPSModel eps(0.80, 24.0, 20.0);
+    EPSModel eps(0.20, 24.0, 20.0);
 
     // Turn ON switch 7 only (rest are off by default)
     eps.set_switch(7, true);
@@ -103,7 +103,7 @@ void broken_solar_panels_test(){
     eps.set_power_per_panel(panel_powers);
 
     // Read sun vectors from file
-    std::vector<std::array<double, 3>> sun_vectors = read_sun_vectors("../inputs/always_sun");
+    std::vector<std::array<double, 3>> sun_vectors = read_sun_vectors("../inputs/strongly_biased_x_sun");
 
     double timestep = 10.0; // 1 second per step (change as needed)
     double elapsed = 0.0;
@@ -113,11 +113,10 @@ void broken_solar_panels_test(){
     std::ofstream(log_file).close();
 
     for (size_t i = 0; i < sun_vectors.size(); ++i) {
-        // Break both X panels after 100 steps
-        if (i == 100) {
-            // 0, 1 = X+/X- are broken
+        // Break +x panels after 100 steps
+        if (i == 0) {
+            // X+ goes down
             panel_powers[0] = 0;
-            panel_powers[1] = 0;
             eps.set_power_per_panel(panel_powers);
         }
         const auto& sv = sun_vectors[i];

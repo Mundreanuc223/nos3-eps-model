@@ -38,8 +38,8 @@ private:
         double battery_watthrs = 0.0;
     };
 
-    std::array<double, 5> power_per_panel; // MAXIMUM Watts per panel (solar_inputs are 5: +X, -X, +Y, -Y, -Z)
-    std::array<double, 5> panel_inputs; // Actual input for each panel, updated each step
+    std::array<double, 5> power_per_panel; // Maximum power per panel {+X, -X, +Y, -Y, -Z}
+    std::array<double, 5> panel_inputs;
     Rail bus[5];   // 0=Battery, 1=3.3V, 2=5V, 3=12V, 4=Solar
     Switch switches[8];   // 8 power switches
     double max_battery;   // Battery capacity
